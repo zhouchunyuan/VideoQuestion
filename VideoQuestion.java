@@ -10,9 +10,10 @@ import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
 
 import javafx.scene.text.Text;
-
 import javafx.scene.text.Font;
 import javafx.scene.text.TextAlignment;
+import javafx.scene.control.Label;
+
 import javafx.scene.layout.StackPane;
 import javafx.scene.media.*;
 import javafx.geometry.Pos;
@@ -20,6 +21,8 @@ import javafx.geometry.Pos;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.scene.control.Button;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.input.MouseButton;
 import javafx.event.*;
 import javafx.util.Duration;
 import java.io.InputStreamReader;
@@ -34,11 +37,11 @@ public class VideoQuestion extends Application {
         MediaPlayer player;
         MediaView viewer;
 
-        Text questionText;
+        Label questionText;
         private String pm4filename = "";
         private final String txtfile = "question.txt";
-        private final String textstyle ="-fx-stroke: white;-fx-stroke-width: 1;-fx-border-color: red;";
-        Text [] answerText = new Text[4];
+        private final String textstyle ="-fx-stroke: white;-fx-stroke-width: 1;-fx-background-color:rgba(0, 0, 0, 0.5);-fx-background-radius: 10;";
+        Label [] answerText = new Label[4];
         private int correctIndex = -1;
         private Button seeAnswerButton = new Button("²Î¿¼´ð°¸");
         private Button returnButton = new Button("·µ»Ø");
@@ -123,7 +126,7 @@ public class VideoQuestion extends Application {
                     for (int i=0;i<answerText.length;i++) {
                         int idx = rand.nextInt(list.size());
                         answerText[i].setText((char)('A'+i)+") "+list.get(idx));
-                        answerText[i].setFill(Color.YELLOW);
+                        answerText[i].setTextFill(Color.YELLOW);
                         if (list.get(idx).equals(sarray[0]))correctIndex=i;//mark the correct answer
                         list.remove(idx);
                     }
@@ -164,11 +167,11 @@ public class VideoQuestion extends Application {
                 public void handle(ActionEvent evt) {
 
                     if (((Button)evt.getSource()).getId().equals("see answer")) {
-                        answerText[correctIndex].setFill(Color.RED);
+                        answerText[correctIndex].setTextFill(Color.RED);
                         returnButton.setVisible(true);
                     }
                     if (((Button)evt.getSource()).getId().equals("return")) {
-                        answerText[correctIndex].setFill(Color.YELLOW);
+                        answerText[correctIndex].setTextFill(Color.YELLOW);
 
                         for (int i=0;i<answerText.length;i++)answerText[i].setText("");
                         questionText.setText("");
@@ -221,7 +224,20 @@ public class VideoQuestion extends Application {
 
 
             StackPane root = new StackPane();
+            root.setStyle("-fx-background-color: #FFFFFF;");
             root.setAlignment(Pos.CENTER_LEFT);
+        root.setOnMouseClicked(new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent e) {
+                if (e.getButton().equals(MouseButton.PRIMARY)) {
+                        if (e.getClickCount() == 1) {
+                                //questionText.setOpacity(0.5);
+                        } else if (e.getClickCount() > 1) {
+                                stage.setFullScreen(true);
+                            }
+                        }
+                    }
+                });
 
             root.getChildren().add(viewer);
             //root.getChildren().add(circ);
@@ -229,9 +245,9 @@ public class VideoQuestion extends Application {
 
 
 
-            questionText = new Text("");
+            questionText = new Label("");
 
-            questionText.setFill(Color.YELLOW);
+            questionText.setTextFill(Color.YELLOW);
             questionText.setFont(new Font(40));
 
             questionText.setStyle(textstyle);
@@ -262,15 +278,16 @@ public class VideoQuestion extends Application {
 
             root.getChildren().add(questionText);
             for (int i=0;i<answerText.length;i++) {
-                answerText[i] = new Text("");
-                answerText[i].setFill(Color.YELLOW);
+                answerText[i] = new Label("");
+                answerText[i].setTextFill(Color.YELLOW);
                 answerText[i].setStyle(textstyle);
                 answerText[i].setFont(Font.font("STHeiti", FontWeight.BOLD, 40));
                 answerText[i].setTextAlignment(TextAlignment.LEFT);
+                //answerText[i].setOpacity(0.7);
                 root.getChildren().add(answerText[i]);
             }
 
-            Scene scenes = new Scene(root, 500, 500, Color.BLACK);
+            Scene scenes = new Scene(root, 500, 500, Color.BEIGE);
             stage.setScene(scenes);
             stage.setTitle("Riddle Game");
             stage.setFullScreen(true);
@@ -279,14 +296,17 @@ public class VideoQuestion extends Application {
             stage.show();
             g.setTranslateY(viewer.getFitHeight()/2-20);
 
-            questionText.setTranslateY(viewer.getFitHeight()/3);
-            questionText.setTranslateX(100);
+            questionText.setTranslateY(-viewer.getFitHeight()/2+viewer.getFitHeight()/8);
+            questionText.setTranslateX(10);
             for (int i=0;i<answerText.length;i++) {
                 int y = i/2;
                 int x = i%2;
-                answerText[i].setTranslateX(20 + viewer.getFitWidth()/2*x);
-                answerText[i].setTranslateY(viewer.getFitHeight()/10-viewer.getFitHeight()/2 + viewer.getFitHeight()/8*y);
-            }
+                //answerText[i].setTranslateX(20 + viewer.getFitWidth()/2*x);
+                answerText[i].setTranslateX(20);
+                answerText[i].setTranslateY(-viewer.getFitHeight()/4+viewer.getFitHeight()/8*i);
+                //answerText[i].setTranslateY( 10+viewer.getFitHeight()/10*y);
+
+                }
 
             player.setCycleCount( MediaPlayer.INDEFINITE );
 
