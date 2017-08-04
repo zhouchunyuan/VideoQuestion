@@ -31,6 +31,9 @@ import java.io.BufferedReader;
 import javafx.scene.text.FontWeight;
 import java.util.Random;
 import java.util.ArrayList;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
+//import java.lang.Number;
 
 public class VideoQuestion extends Application {
 
@@ -38,11 +41,13 @@ public class VideoQuestion extends Application {
         MediaView viewer;
 
         Label questionText;
-        private String pm4filename = "";
+        private String mp4filename = "";
         private final String txtfile = "question.txt";
         private final String textstyle ="-fx-stroke: white;-fx-stroke-width: 1;-fx-background-color:rgba(0, 0, 0, 0.5);-fx-background-radius: 10;";
         Label [] answerText = new Label[4];
         private int correctIndex = -1;
+        private Group g;//button holder
+        private Button []buttons;
         private Button seeAnswerButton = new Button("²Î¿¼´ð°¸");
         private Button returnButton = new Button("·µ»Ø");
 
@@ -83,7 +88,7 @@ public class VideoQuestion extends Application {
         private void readtxtfile() {
             String line = null;
             try (BufferedReader input = new BufferedReader(new InputStreamReader(new FileInputStream(txtfile)))) {
-                pm4filename = input.readLine();//first line is mp4 filename
+                mp4filename = input.readLine();//first line is mp4 filename
                 String timeStr = input.readLine();//2nd line is time points
                 String []sarray = timeStr.split(",");//parameters are seperated by ","
                 for (int i=0;i<sarray.length;i++) {
@@ -136,7 +141,7 @@ public class VideoQuestion extends Application {
                     seeAnswerButton.setVisible(true);
                     try {
 
-                        File f = new File(Dir, pm4filename);
+                        File f = new File(Dir, mp4filename);
 
                         //Converts media to string URL
 
@@ -181,7 +186,7 @@ public class VideoQuestion extends Application {
 
                         try {
 
-                            File f = new File(Dir, pm4filename);
+                            File f = new File(Dir, mp4filename);
 
                             //Converts media to string URL
 
@@ -202,18 +207,39 @@ public class VideoQuestion extends Application {
                 }
         }
 
+
         @Override
         public void start(Stage stage) throws Exception {
 
             readtxtfile();
             //goes to user Directory
-            File f = new File(Dir, pm4filename);
+            File f = new File(Dir, mp4filename);
 
 
             //Converts media to string URL
             player = new MediaPlayer(new Media(f.toURI().toURL().toString()));
             viewer = new MediaView(player);
-
+            
+            StackPane root = new StackPane();
+            root.setStyle("-fx-background-color: #FFFFFF;");
+            root.setAlignment(Pos.CENTER_LEFT);
+            root.setOnMouseClicked(new EventHandler<MouseEvent>() {
+                @Override
+                public void handle(MouseEvent e) {
+                    if (e.getButton().equals(MouseButton.PRIMARY)) {
+                        if (e.getClickCount() == 1) {
+                            //questionText.setOpacity(0.5);
+                        } else if (e.getClickCount() > 1) {
+                            stage.setFullScreen(true);
+                        }
+                    }
+                }
+            }
+                                  );
+            Scene scenes = new Scene(root, 500, 500, Color.BEIGE);
+            stage.setScene(scenes);
+            stage.setTitle("Riddle Game");
+            stage.setFullScreen(true);
             //change width and height to fit video
             DoubleProperty width = viewer.fitWidthProperty();
             DoubleProperty height = viewer.fitHeightProperty();
@@ -223,25 +249,11 @@ public class VideoQuestion extends Application {
 
 
 
-            StackPane root = new StackPane();
-            root.setStyle("-fx-background-color: #FFFFFF;");
-            root.setAlignment(Pos.CENTER_LEFT);
-        root.setOnMouseClicked(new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent e) {
-                if (e.getButton().equals(MouseButton.PRIMARY)) {
-                        if (e.getClickCount() == 1) {
-                                //questionText.setOpacity(0.5);
-                        } else if (e.getClickCount() > 1) {
-                                stage.setFullScreen(true);
-                            }
-                        }
-                    }
-                });
+
 
             root.getChildren().add(viewer);
             //root.getChildren().add(circ);
-            Group g = new Group();
+            g = new Group();
 
 
 
@@ -259,7 +271,7 @@ public class VideoQuestion extends Application {
             g.getChildren().add(seeAnswerButton);
             g.getChildren().add(returnButton);
 
-            Button []buttons = new Button[10];
+            buttons = new Button[10];
             for (int i=0;i<10;i++) {
                 buttons[i]=new Button(""+(i+1));
 
@@ -287,26 +299,36 @@ public class VideoQuestion extends Application {
                 root.getChildren().add(answerText[i]);
             }
 
-            Scene scenes = new Scene(root, 500, 500, Color.BEIGE);
-            stage.setScene(scenes);
-            stage.setTitle("Riddle Game");
-            stage.setFullScreen(true);
 
+
+            scenes.widthProperty().addListener(new ChangeListener<Number>() {
+                @Override public void changed(ObservableValue<? extends Number> observableValue, Number oldWidth, Number newWidth) {
+                    //System.out.println("Width: " + newWidth);
+                    //g.setTranslateY(viewer.getFitHeight()/2-20);
+                }
+            });
+            scenes.heightProperty().addListener(new ChangeListener<Number>() {
+                @Override public void changed(ObservableValue<? extends Number> observableValue, Number oldSceneHeight, Number newSceneHeight) {
+                    //System.out.println("Height: " + newSceneHeight);
+                    g.setTranslateY(viewer.getFitHeight()/2-20);
+                    questionText.setTranslateX(10);
+                    questionText.setTranslateY(-viewer.getFitHeight()/2+viewer.getFitHeight()/8);
+                    questionText.setFont(new Font(viewer.getFitHeight()/20));
+                    for (int i=0;i<answerText.length;i++) {
+                        int y = i/2;
+                        int x = i%2;
+                        //answerText[i].setTranslateX(20 + viewer.getFitWidth()/2*x);
+                        answerText[i].setFont(new Font(viewer.getFitHeight()/20));
+                        answerText[i].setTranslateX(20);
+                        answerText[i].setTranslateY(-viewer.getFitHeight()/4+viewer.getFitHeight()/8*i);
+                        //answerText[i].setTranslateY( 10+viewer.getFitHeight()/10*y);
+
+                    }
+                }
+            }
+                                               );
 
             stage.show();
-            g.setTranslateY(viewer.getFitHeight()/2-20);
-
-            questionText.setTranslateY(-viewer.getFitHeight()/2+viewer.getFitHeight()/8);
-            questionText.setTranslateX(10);
-            for (int i=0;i<answerText.length;i++) {
-                int y = i/2;
-                int x = i%2;
-                //answerText[i].setTranslateX(20 + viewer.getFitWidth()/2*x);
-                answerText[i].setTranslateX(20);
-                answerText[i].setTranslateY(-viewer.getFitHeight()/4+viewer.getFitHeight()/8*i);
-                //answerText[i].setTranslateY( 10+viewer.getFitHeight()/10*y);
-
-                }
 
             player.setCycleCount( MediaPlayer.INDEFINITE );
 
